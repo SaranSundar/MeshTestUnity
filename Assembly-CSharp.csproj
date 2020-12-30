@@ -53,6 +53,7 @@
   </PropertyGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\FieldOfViewMesh.cs" />
+     <Compile Include="Assets\Scripts\FogOfWarMesh.cs" />
  <Reference Include="UnityEngine">
  <HintPath>/Applications/Unity/Hub/Editor/2020.2.1f1/Unity.app/Contents/Managed/UnityEngine/UnityEngine.dll</HintPath>
  </Reference>

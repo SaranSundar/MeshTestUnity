@@ -11,9 +11,9 @@ public class FieldOfViewMesh : MonoBehaviour
     private Vector3[] vertices;
     private Color[] colors;
     int[] triangles;
-    public int sides = 6;
-    public float size = 5.0f;
-    public float chaos = 0.0f;
+    private int sides = 6;
+    private float size = 2.0f;
+    private float chaos = 0.0f;
 
 
     private void Awake()
