@@ -105,7 +105,6 @@ public class FogOfWarMesh : MonoBehaviour
     }
 
     public void ColorTriangles()
-
     {
         Vector3[] verticesModified = new Vector3[triangles.Length];
         int[] trianglesModified = new int[triangles.Length];
