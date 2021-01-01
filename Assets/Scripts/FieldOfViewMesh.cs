@@ -5,14 +5,16 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(MeshFilter))]
+[RequireComponent(typeof(MeshRenderer))]
 public class FieldOfViewMesh : MonoBehaviour
 {
     private Mesh mesh;
     private Vector3[] vertices;
     private Color[] colors;
-    int[] triangles;
+    private int[] triangles;
     private int sides = 60;
     private float size = 2.0f;
+    public List<Vector3[]> triangleFaces;
 
 
     private void Awake()
@@ -20,7 +22,7 @@ public class FieldOfViewMesh : MonoBehaviour
         mesh = GetComponent<MeshFilter>().mesh;
     }
 
-    void CreateVerticeCoordinates()
+    void CreateVerticeCoordinatesFromUnitCircle()
     {
         // 1 unit in local space is 1 meter in unity
         vertices = new Vector3[sides + 1];
@@ -44,7 +46,7 @@ public class FieldOfViewMesh : MonoBehaviour
 
     void CreateMesh()
     {
-        CreateVerticeCoordinates();
+        CreateVerticeCoordinatesFromUnitCircle();
         MakeMeshData();
         ColorTriangles();
     }
@@ -90,6 +92,20 @@ public class FieldOfViewMesh : MonoBehaviour
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
+        CalculateTriangleFaces();
+    }
+    
+    void CalculateTriangleFaces()
+    {
+        triangleFaces = new List<Vector3[]>();
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            Vector3[] triangleFace = new Vector3[3];
+            triangleFace[0] = vertices[triangles[i + 0]];
+            triangleFace[1] = vertices[triangles[i + 1]];
+            triangleFace[2] = vertices[triangles[i + 2]];
+            triangleFaces.Add(triangleFace);
+        }
     }
 
     Color32 getColor()
