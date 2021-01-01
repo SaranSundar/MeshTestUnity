@@ -11,9 +11,8 @@ public class FieldOfViewMesh : MonoBehaviour
     private Vector3[] vertices;
     private Color[] colors;
     int[] triangles;
-    private int sides = 6;
+    private int sides = 60;
     private float size = 2.0f;
-    private float chaos = 0.0f;
 
 
     private void Awake()
@@ -21,26 +20,18 @@ public class FieldOfViewMesh : MonoBehaviour
         mesh = GetComponent<MeshFilter>().mesh;
     }
 
-    float calculateDistance(float size, float chaos)
+    void CreateVerticeCoordinates()
     {
-        return Random.Range(size - chaos, size + chaos);
-    }
-
-    void CreateVerticeCoordinates(int sides, float size)
-    {
+        // 1 unit in local space is 1 meter in unity
         vertices = new Vector3[sides + 1];
-        colors = new Color[vertices.Length];
         vertices[0] = new Vector3(0, 0, 0);
-        colors[0] = Color.black;
-        triangles = new int[sides * 3];
         for (int i = 1; i <= sides; i++)
         {
-            float x = calculateDistance(size, chaos) * Mathf.Cos(((Mathf.PI * 2) / sides) * i);
-            float y = calculateDistance(size, chaos) * Mathf.Sin(((Mathf.PI * 2) / sides) * i);
+            // Points along a unit circle scaled up by size
+            float x = size * Mathf.Cos(((Mathf.PI * 2) / sides) * i);
+            float y = size * Mathf.Sin(((Mathf.PI * 2) / sides) * i);
 
-            Vector3 verticePos = new Vector3(x, y, 0);
-            vertices[i] = verticePos;
-            colors[i] = Color.green;
+            vertices[i] = new Vector3(x, y, 0);
         }
     }
 
@@ -48,14 +39,19 @@ public class FieldOfViewMesh : MonoBehaviour
     {
         transform.Rotate(-90, 0, 0);
         transform.position = new Vector3(0, 2, 0);
-        CreateVerticeCoordinates(sides, size);
-        MakeMeshData();
         CreateMesh();
     }
 
-
+    void CreateMesh()
+    {
+        CreateVerticeCoordinates();
+        MakeMeshData();
+        ColorTriangles();
+    }
+    
     void MakeMeshData()
     {
+        triangles = new int[sides * 3];
         for (int t = 0; t < triangles.Length; t += 3)
         {
             triangles[t + 0] = 0; //set 0 to the center
@@ -63,45 +59,6 @@ public class FieldOfViewMesh : MonoBehaviour
             //second edge point. If we're at the end this will loop back to 1
             triangles[t + 2] = ((t / 3) + 1) % (vertices.Length - 1) + 1;
         }
-    }
-
-    Color32 getColor(int i)
-    {
-        Color32[] color32 = new Color32[27];
-        color32[0] = Color.red;
-        color32[1] = Color.blue;
-        color32[2] = Color.cyan;
-        color32[3] = Color.green;
-        color32[4] = Color.magenta;
-        color32[5] = Color.yellow;
-        String choice = "";
-        if (i == 0)
-        {
-            choice = "black"; 
-        }
-        else if (i == 1)
-        {
-            choice = "blue";
-        }
-        else if (i == 2)
-        {
-            choice = "cyan";
-        }
-        else if (i == 3)
-        {
-            choice = "green";
-        }
-        else if (i == 4)
-        {
-            choice = "magenta";
-        }
-        else if (i == 5)
-        {
-            choice = "yellow";
-        }
-
-        Debug.Log("I is: " + i + " Color is: " + choice);
-        return color32[i / 3];
     }
 
     public void ColorTriangles()
@@ -119,35 +76,32 @@ public class FieldOfViewMesh : MonoBehaviour
             // Every third vertex randomly chooses new color
             if (i % 3 == 0)
             {
-                // currentColor = new Color(
-                //     Random.Range (0.0f, 1.0f),
-                //     Random.Range (0.0f, 1.0f),
-                //     Random.Range (0.0f, 1.0f),
-                //     1.0f
-                // );
-                currentColor = getColor(i);
+                currentColor = getColor();
             }
 
             colors[i] = currentColor;
         }
 
         // Applyes changes to mesh
+        mesh.Clear();
         mesh.vertices = verticesModified;
         mesh.triangles = trianglesModified;
         mesh.colors32 = colors;
-    }
-
-    void CreateMesh()
-    {
-        // mesh.Clear();
-        // mesh.vertices = vertices;
-        // mesh.triangles = triangles;
-        // mesh.colors = colors;
-
-        mesh.Clear();
-        ColorTriangles();
-
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
+        mesh.RecalculateTangents();
+    }
+
+    Color32 getColor()
+    {
+        Color32[] color32 = new Color32[6];
+        color32[0] = Color.red;
+        color32[1] = Color.blue;
+        color32[2] = Color.cyan;
+        color32[3] = Color.green;
+        color32[4] = Color.magenta;
+        color32[5] = Color.yellow;
+        int color = Random.Range(0, color32.Length);
+        return color32[color];
     }
 }
