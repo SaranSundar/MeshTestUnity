@@ -12,9 +12,9 @@ public class FieldOfViewMesh : MonoBehaviour
     private Vector3[] vertices;
     private Color[] colors;
     private int[] triangles;
-    private int sides = 60;
+    private int sides = 6;
     private float size = 2.0f;
-    public List<Vector3[]> triangleFaces;
+    public List<FogOfWarMesh.Triangle> triangleFaces;
 
 
     private void Awake()
@@ -78,16 +78,18 @@ public class FieldOfViewMesh : MonoBehaviour
             // Every third vertex randomly chooses new color
             if (i % 3 == 0)
             {
-                currentColor = getColor();
+                currentColor = getColor(i);
             }
 
             colors[i] = currentColor;
         }
 
         // Applyes changes to mesh
+        vertices = verticesModified;
+        triangles = trianglesModified;
         mesh.Clear();
-        mesh.vertices = verticesModified;
-        mesh.triangles = trianglesModified;
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
         mesh.colors32 = colors;
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
@@ -97,18 +99,17 @@ public class FieldOfViewMesh : MonoBehaviour
     
     void CalculateTriangleFaces()
     {
-        triangleFaces = new List<Vector3[]>();
+        triangleFaces = new List<FogOfWarMesh.Triangle>();
         for (int i = 0; i < triangles.Length; i += 3)
         {
-            Vector3[] triangleFace = new Vector3[3];
-            triangleFace[0] = vertices[triangles[i + 0]];
-            triangleFace[1] = vertices[triangles[i + 1]];
-            triangleFace[2] = vertices[triangles[i + 2]];
+            FogOfWarMesh.Triangle triangleFace = new FogOfWarMesh.Triangle(vertices[triangles[i + 0]], vertices[triangles[i + 1]], vertices[triangles[i + 2]]);
             triangleFaces.Add(triangleFace);
         }
+
+        Debug.Log("there are " + triangleFaces.Count + " triangle faces");
     }
 
-    Color32 getColor()
+    Color32 getColor(int i)
     {
         Color32[] color32 = new Color32[6];
         color32[0] = Color.red;
@@ -117,7 +118,7 @@ public class FieldOfViewMesh : MonoBehaviour
         color32[3] = Color.green;
         color32[4] = Color.magenta;
         color32[5] = Color.yellow;
-        int color = Random.Range(0, color32.Length);
+        int color = i / 3;
         return color32[color];
     }
 }
