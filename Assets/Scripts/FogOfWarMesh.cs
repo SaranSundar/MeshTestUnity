@@ -25,8 +25,7 @@ public class FogOfWarMesh : MonoBehaviour
 
     void Start()
     {
-        transform.Rotate(-90, 0, 0);
-        transform.position = new Vector3(0, 4, 0);
+        transform.position = new Vector3(0, 0, -4);
         CreateMesh();
         fieldOfViewMesh = GameObject.Find("FieldOfViewMesh").GetComponent<FieldOfViewMesh>();
     }
@@ -91,6 +90,9 @@ public class FogOfWarMesh : MonoBehaviour
                 vertices[triangles[i + 2]]);
             if (AreTrianglesEqual(triangleFace, fogFace))
             {
+                Debug.Log(triangleFace.p1 + " " + triangleFace.p2 + " " + triangleFace.p3);
+                Debug.Log("Colors are " + colors[i] + " " + colors[i + 1] + " " +
+                          colors[i + 2]);
                 colors[i].a = 150;
                 colors[i + 1].a = 150;
                 colors[i + 2].a = 150;
@@ -129,10 +131,12 @@ public class FogOfWarMesh : MonoBehaviour
         for (int i = 1; i <= sides; i++)
         {
             // Points along a unit circle scaled up by size
-            float x = size * Mathf.Cos(((Mathf.PI * 2) / sides) * i);
-            float y = size * Mathf.Sin(((Mathf.PI * 2) / sides) * i);
+            float x = size * Mathf.Cos(Mathf.PI * 2 / sides * i);
+            float y = size * Mathf.Sin(Mathf.PI * 2 / sides * i);
 
             vertices[i] = new Vector3(x, y, 0);
+            //Debug.Log(vertices[i]);
+            
         }
     }
 
@@ -154,13 +158,13 @@ public class FogOfWarMesh : MonoBehaviour
             triangles[t + 2] = ((t / 3) + 1) % (vertices.Length - 1) + 1;
         }
     }
-    
+
     Color32 getColor(int i)
     {
         Color32[] color32 = new Color32[6];
         color32[0] = Color.black;
         color32[1] = Color.gray;
-        color32[2] = Color.white;
+        color32[2] = Color.magenta;
         color32[3] = Color.blue;
         color32[4] = Color.red;
         color32[5] = Color.green;
@@ -187,6 +191,8 @@ public class FogOfWarMesh : MonoBehaviour
             }
 
             colors[i] = currentColor;
+            Debug.Log("starting color is " + currentColor);
+            Debug.Log(verticesModified[i]);
         }
 
         // Applyes changes to mesh

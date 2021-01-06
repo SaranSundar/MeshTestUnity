@@ -39,8 +39,8 @@ public class FieldOfViewMesh : MonoBehaviour
 
     void Start()
     {
-        transform.Rotate(-90, 0, 0);
-        transform.position = new Vector3(0, 2, 0);
+        //transform.Rotate(-90, 0, 0);
+        transform.position = new Vector3(0, 0, -2);
         CreateMesh();
     }
 
