@@ -22,92 +22,8 @@ public class FogOfWarMesh : MonoBehaviour
         fieldOfViewMesh = GameObject.Find("FieldOfViewMesh").GetComponent<FieldOfViewMesh>();
     }
 
-    private void Update()
-    {
-        FindIntersectingTriangleFaces();
-    }
-
-    Triangle applyPositionToTriangle(Triangle original, Vector3 position)
-    {
-        // The z in the original is always 0, we need to switch positions z and y
-        Vector3 p1 = new Vector3(original.p1.x, original.p1.z, original.p1.y) + position;
-        Vector3 p2 = new Vector3(original.p2.x, original.p2.z, original.p2.y) + position;
-        Vector3 p3 = new Vector3(original.p3.x, original.p3.z, original.p3.y) + position;
-        p1.y = 0;
-        p2.y = 0;
-        p3.y = 0;
-        Triangle newTriangle = new Triangle(p1, p2, p3);
-        return newTriangle;
-    }
-
-    void FindIntersectingTriangleFaces()
-    {
-        List<Triangle> playerTriangleFaces = fieldOfViewMesh.triangleFaces;
-        List<Triangle> fogOfWarTriangleFaces = triangleFaces;
-
-        ResetAllFogFacesToBlack();
-
-        for (int r = 0; r < playerTriangleFaces.Count; r++)
-        {
-            for (int c = 0; c < fogOfWarTriangleFaces.Count; c++)
-            {
-                Triangle playerFace =
-                    applyPositionToTriangle(playerTriangleFaces[r], fieldOfViewMesh.transform.position);
-                Triangle fogFace = applyPositionToTriangle(fogOfWarTriangleFaces[c], transform.position);
-
-                if (IsTriangleTriangleIntersecting(playerFace, fogFace))
-                {
-                    ChangeTriangleFaceToTransparent(fogOfWarTriangleFaces[c]);
-                }
-            }
-        }
-
-        mesh.colors32 = colors;
-    }
-
-    void ResetAllFogFacesToBlack()
-    {
-        for (int i = 0; i < colors.Length; i++)
-        {
-            colors[i].a = 255;
-        }
-    }
-
-    void ChangeTriangleFaceToTransparent(Triangle fogFace)
-    {
-        //Debug.Log("Colliding");
-        for (int i = 0; i < triangles.Length; i += 3)
-        {
-            Triangle triangleFace = new Triangle(vertices[triangles[i + 0]], vertices[triangles[i + 1]],
-                vertices[triangles[i + 2]]);
-            if (AreTrianglesEqual(triangleFace, fogFace))
-            {
-                Debug.Log(triangleFace.p1 + " " + triangleFace.p2 + " " + triangleFace.p3);
-                Debug.Log("Colors are " + colors[i] + " " + colors[i + 1] + " " +
-                          colors[i + 2]);
-                colors[i].a = 150;
-                colors[i + 1].a = 150;
-                colors[i + 2].a = 150;
-            }
-        }
-    }
-
-    bool AreTrianglesEqual(Triangle t1, Triangle t2)
-    {
-        if (t1.p1.Equals(t2.p1) && t1.p2.Equals(t2.p2) && t1.p3.Equals(t2.p3))
-        {
-            return true;
-        }
-
-        return false;
-    }
-
     void CreateMesh()
     {
-        // CreateVerticeCoordinatesFromUnitCircle();
-        // MakeMeshData();
-        // ColorTriangles();
-
         // Allowed colors
         Color32[] color32 = {Color.red, Color.blue, Color.cyan, Color.green, Color.magenta, Color.yellow};
 
@@ -157,6 +73,76 @@ public class FogOfWarMesh : MonoBehaviour
             triangleFaces.Add(new FogOfWarMesh.Triangle(
                 vertices[i], vertices[i + 1], vertices[i + 2]));
         }
+    }
+
+    private void Update()
+    {
+        FindIntersectingTriangleFaces();
+    }
+
+    void FindIntersectingTriangleFaces()
+    {
+        List<Triangle> playerTriangleFaces = fieldOfViewMesh.triangleFaces;
+        List<Triangle> fogOfWarTriangleFaces = triangleFaces;
+
+        ResetAllFogFacesToBlack();
+
+        for (int r = 0; r < playerTriangleFaces.Count; r++)
+        {
+            for (int c = 0; c < fogOfWarTriangleFaces.Count; c++)
+            {
+                Triangle playerFace =
+                    applyPositionToTriangle(playerTriangleFaces[r], fieldOfViewMesh.transform.position);
+                Triangle fogFace = applyPositionToTriangle(fogOfWarTriangleFaces[c], transform.position);
+
+                if (IsTriangleTriangleIntersecting(playerFace, fogFace))
+                {
+                    ChangeTriangleFaceToTransparent(fogOfWarTriangleFaces[c]);
+                }
+            }
+        }
+
+        mesh.colors32 = colors;
+    }
+
+    Triangle applyPositionToTriangle(Triangle original, Vector3 position)
+    {
+        // The z in the original is always 0, we need to switch positions z and y
+        Vector3 p1 = new Vector3(original.p1.x, original.p1.y, original.p1.z) + position;
+        Vector3 p2 = new Vector3(original.p2.x, original.p2.y, original.p2.z) + position;
+        Vector3 p3 = new Vector3(original.p3.x, original.p3.y, original.p3.z) + position;
+        Triangle newTriangle = new Triangle(p1, p2, p3);
+        return newTriangle;
+    }
+
+    void ResetAllFogFacesToBlack()
+    {
+        for (int i = 0; i < colors.Length; i++)
+        {
+            colors[i].a = 255;
+        }
+    }
+
+    void ChangeTriangleFaceToTransparent(Triangle fogFace)
+    {
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            Triangle triangleFace = new Triangle(
+                vertices[triangles[i + 0]],
+                vertices[triangles[i + 1]],
+                vertices[triangles[i + 2]]);
+            if (AreTrianglesEqual(triangleFace, fogFace))
+            {
+                colors[i].a = 150;
+                colors[i + 1].a = 150;
+                colors[i + 2].a = 150;
+            }
+        }
+    }
+
+    bool AreTrianglesEqual(Triangle t1, Triangle t2)
+    {
+        return t1.p1.Equals(t2.p1) && t1.p2.Equals(t2.p2) && t1.p3.Equals(t2.p3);
     }
 
     public struct Triangle
@@ -341,20 +327,12 @@ public class FogOfWarMesh : MonoBehaviour
 //From http://totologic.blogspot.se/2014/01/accurate-point-in-triangle-test.html
     bool IsPointInTriangle(Vector3 p, Vector3 p1, Vector3 p2, Vector3 p3)
     {
-        bool isWithinTriangle = false;
-
         float denominator = ((p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z));
-
         float a = ((p2.z - p3.z) * (p.x - p3.x) + (p3.x - p2.x) * (p.z - p3.z)) / denominator;
         float b = ((p3.z - p1.z) * (p.x - p3.x) + (p1.x - p3.x) * (p.z - p3.z)) / denominator;
         float c = 1 - a - b;
 
-        //The point is within the triangle if 0 <= a <= 1 and 0 <= b <= 1 and 0 <= c <= 1
-        if (a >= 0f && a <= 1f && b >= 0f && b <= 1f && c >= 0f && c <= 1f)
-        {
-            isWithinTriangle = true;
-        }
-
-        return isWithinTriangle;
+        // The point is within the triangle if...
+        return a >= 0f && a <= 1f && b >= 0f && b <= 1f && c >= 0f && c <= 1f;
     }
 }
