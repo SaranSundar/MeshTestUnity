@@ -1,92 +1,61 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
 public class FieldOfViewMesh : MonoBehaviour
 {
+    private Color32[] colors;
     private Mesh mesh;
-    private Vector3[] vertices;
-    private Color[] colors;
-    private int[] triangles;
-    private int sides = 6;
-    private float size = 2.0f;
+    private readonly int sides = 6;
+    private readonly float size = 2.0f;
     public List<FogOfWarMesh.Triangle> triangleFaces;
+    private int[] triangles;
+    private Vector3[] vertices;
 
-
-    private void Awake()
+    private void Start()
     {
         mesh = GetComponent<MeshFilter>().mesh;
-    }
-
-    void CreateVerticeCoordinatesFromUnitCircle()
-    {
-        // 1 unit in local space is 1 meter in unity
-        vertices = new Vector3[sides + 1];
-        vertices[0] = new Vector3(0, 0, 0);
-        for (int i = 1; i <= sides; i++)
-        {
-            // Points along a unit circle scaled up by size
-            float x = size * Mathf.Cos(((Mathf.PI * 2) / sides) * i);
-            float y = size * Mathf.Sin(((Mathf.PI * 2) / sides) * i);
-
-            vertices[i] = new Vector3(x, y, 0);
-        }
-    }
-
-    void Start()
-    {
-        //transform.Rotate(-90, 0, 0);
-        transform.position = new Vector3(0, 0, -2);
+        transform.position = new Vector3(0, 1, 0);
         CreateMesh();
     }
 
-    void CreateMesh()
+    private void CreateMesh()
     {
-        CreateVerticeCoordinatesFromUnitCircle();
-        MakeMeshData();
-        ColorTriangles();
-    }
-    
-    void MakeMeshData()
-    {
+        // Allowed colors
+        Color32[] color32 = {Color.red, Color.blue, Color.cyan, Color.green, Color.magenta, Color.yellow};
+
+        // Generate three vertices per triangle face, one color per vertex
+        colors = new Color32[sides * 3];
+        vertices = new Vector3[sides * 3];
         triangles = new int[sides * 3];
-        for (int t = 0; t < triangles.Length; t += 3)
+        for (var i = 0; i < sides; i++)
         {
-            triangles[t + 0] = 0; //set 0 to the center
-            triangles[t + 1] = (t / 3) + 1; //first edge point
-            //second edge point. If we're at the end this will loop back to 1
-            triangles[t + 2] = ((t / 3) + 1) % (vertices.Length - 1) + 1;
-        }
-    }
+            // Create triangle points, set all points to the same color
 
-    public void ColorTriangles()
+            // Center point
+            colors[3 * i] = color32[i % color32.Length];
+            vertices[3 * i] = Vector3.zero;
+            triangles[3 * i] = 3 * i;
 
-    {
-        Vector3[] verticesModified = new Vector3[triangles.Length];
-        int[] trianglesModified = new int[triangles.Length];
-        Color32 currentColor = new Color32();
-        Color32[] colors = new Color32[triangles.Length];
-        for (int i = 0; i < trianglesModified.Length; i++)
-        {
-            // Makes every vertex unique
-            verticesModified[i] = vertices[triangles[i]];
-            trianglesModified[i] = i;
-            // Every third vertex randomly chooses new color
-            if (i % 3 == 0)
-            {
-                currentColor = getColor(i);
-            }
+            // Along current angle in unit circle
+            colors[3 * i + 1] = color32[i % color32.Length];
+            vertices[3 * i + 1] = new Vector3(
+                Mathf.Cos(2 * Mathf.PI / sides * i),
+                0,
+                Mathf.Sin(2 * Mathf.PI / sides * i)) * size;
+            triangles[3 * i + 1] = 3 * i + 1;
 
-            colors[i] = currentColor;
+            // Along next angle in unit circle
+            colors[3 * i + 2] = color32[i % color32.Length];
+            vertices[3 * i + 2] = new Vector3(
+                Mathf.Cos(2 * Mathf.PI / sides * (i + 1)),
+                0,
+                Mathf.Sin(2 * Mathf.PI / sides * (i + 1))) * size;
+            triangles[3 * i + 2] = 3 * i + 2;
         }
 
-        // Applyes changes to mesh
-        vertices = verticesModified;
-        triangles = trianglesModified;
+        // Apply calculations to the mesh
         mesh.Clear();
         mesh.vertices = vertices;
         mesh.triangles = triangles;
@@ -94,31 +63,11 @@ public class FieldOfViewMesh : MonoBehaviour
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
-        CalculateTriangleFaces();
-    }
-    
-    void CalculateTriangleFaces()
-    {
+
+        // Create "triangle" array
         triangleFaces = new List<FogOfWarMesh.Triangle>();
-        for (int i = 0; i < triangles.Length; i += 3)
-        {
-            FogOfWarMesh.Triangle triangleFace = new FogOfWarMesh.Triangle(vertices[triangles[i + 0]], vertices[triangles[i + 1]], vertices[triangles[i + 2]]);
-            triangleFaces.Add(triangleFace);
-        }
-
-        Debug.Log("there are " + triangleFaces.Count + " triangle faces");
-    }
-
-    Color32 getColor(int i)
-    {
-        Color32[] color32 = new Color32[6];
-        color32[0] = Color.red;
-        color32[1] = Color.blue;
-        color32[2] = Color.cyan;
-        color32[3] = Color.green;
-        color32[4] = Color.magenta;
-        color32[5] = Color.yellow;
-        int color = i / 3;
-        return color32[color];
+        for (var i = 0; i < vertices.Length; i += 3)
+            triangleFaces.Add(new FogOfWarMesh.Triangle(
+                vertices[i], vertices[i + 1], vertices[i + 2]));
     }
 }

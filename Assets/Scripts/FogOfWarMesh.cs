@@ -1,8 +1,5 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
@@ -17,15 +14,10 @@ public class FogOfWarMesh : MonoBehaviour
     private FieldOfViewMesh fieldOfViewMesh;
     private List<Triangle> triangleFaces;
 
-
-    private void Awake()
-    {
-        mesh = GetComponent<MeshFilter>().mesh;
-    }
-
     void Start()
     {
-        transform.position = new Vector3(0, 0, -4);
+        mesh = GetComponent<MeshFilter>().mesh;
+        transform.position = new Vector3(0, 2, 0);
         CreateMesh();
         fieldOfViewMesh = GameObject.Find("FieldOfViewMesh").GetComponent<FieldOfViewMesh>();
     }
@@ -110,94 +102,46 @@ public class FogOfWarMesh : MonoBehaviour
         return false;
     }
 
-    void CalculateTriangleFaces()
-    {
-        triangleFaces = new List<Triangle>();
-        for (int i = 0; i < triangles.Length; i += 3)
-        {
-            Triangle triangleFace = new Triangle(vertices[triangles[i + 0]], vertices[triangles[i + 1]],
-                vertices[triangles[i + 2]]);
-            triangleFaces.Add(triangleFace);
-        }
-
-        Debug.Log("there are " + triangleFaces.Count + " triangle faces");
-    }
-
-    void CreateVerticeCoordinatesFromUnitCircle()
-    {
-        // 1 unit in local space is 1 meter in unity
-        vertices = new Vector3[sides + 1];
-        vertices[0] = new Vector3(0, 0, 0);
-        for (int i = 1; i <= sides; i++)
-        {
-            // Points along a unit circle scaled up by size
-            float x = size * Mathf.Cos(Mathf.PI * 2 / sides * i);
-            float y = size * Mathf.Sin(Mathf.PI * 2 / sides * i);
-
-            vertices[i] = new Vector3(x, y, 0);
-            //Debug.Log(vertices[i]);
-            
-        }
-    }
-
     void CreateMesh()
     {
-        CreateVerticeCoordinatesFromUnitCircle();
-        MakeMeshData();
-        ColorTriangles();
-    }
+        // CreateVerticeCoordinatesFromUnitCircle();
+        // MakeMeshData();
+        // ColorTriangles();
 
-    void MakeMeshData()
-    {
+        // Allowed colors
+        Color32[] color32 = {Color.red, Color.blue, Color.cyan, Color.green, Color.magenta, Color.yellow};
+
+        // Generate three vertices per triangle face, one color per vertex
+        colors = new Color32[sides * 3];
+        vertices = new Vector3[sides * 3];
         triangles = new int[sides * 3];
-        for (int t = 0; t < triangles.Length; t += 3)
+        for (int i = 0; i < sides; i++)
         {
-            triangles[t + 0] = 0; //set 0 to the center
-            triangles[t + 1] = (t / 3) + 1; //first edge point
-            //second edge point. If we're at the end this will loop back to 1
-            triangles[t + 2] = ((t / 3) + 1) % (vertices.Length - 1) + 1;
-        }
-    }
+            // Create triangle points, set all points to the same color
 
-    Color32 getColor(int i)
-    {
-        Color32[] color32 = new Color32[6];
-        color32[0] = Color.black;
-        color32[1] = Color.gray;
-        color32[2] = Color.magenta;
-        color32[3] = Color.blue;
-        color32[4] = Color.red;
-        color32[5] = Color.green;
-        int color = i / 3;
-        return color32[color];
-    }
+            // Center point
+            colors[3 * i] = color32[i % color32.Length];
+            vertices[3 * i] = Vector3.zero;
+            triangles[3 * i] = 3 * i;
 
-    public void ColorTriangles()
-    {
-        Vector3[] verticesModified = new Vector3[triangles.Length];
-        int[] trianglesModified = new int[triangles.Length];
-        Color32 currentColor = new Color32();
-        colors = new Color32[triangles.Length];
-        // Create map of triangle values to color values later
-        for (int i = 0; i < trianglesModified.Length; i++)
-        {
-            // Makes every vertex unique
-            verticesModified[i] = vertices[triangles[i]];
-            trianglesModified[i] = i;
-            // Every third vertex randomly chooses new color
-            if (i % 3 == 0)
-            {
-                currentColor = getColor(i);
-            }
+            // Along current angle in unit circle
+            colors[3 * i + 1] = color32[i % color32.Length];
+            vertices[3 * i + 1] = new Vector3(
+                Mathf.Cos(2 * Mathf.PI / sides * i),
+                0,
+                Mathf.Sin(2 * Mathf.PI / sides * i)) * size;
+            triangles[3 * i + 1] = 3 * i + 1;
 
-            colors[i] = currentColor;
-            Debug.Log("starting color is " + currentColor);
-            Debug.Log(verticesModified[i]);
+            // Along next angle in unit circle
+            colors[3 * i + 2] = color32[i % color32.Length];
+            vertices[3 * i + 2] = new Vector3(
+                Mathf.Cos(2 * Mathf.PI / sides * (i + 1)),
+                0,
+                Mathf.Sin(2 * Mathf.PI / sides * (i + 1))) * size;
+            triangles[3 * i + 2] = 3 * i + 2;
         }
 
-        // Applyes changes to mesh
-        vertices = verticesModified;
-        triangles = trianglesModified;
+        // Apply calculations to the mesh
         mesh.Clear();
         mesh.vertices = vertices;
         mesh.triangles = triangles;
@@ -205,7 +149,14 @@ public class FogOfWarMesh : MonoBehaviour
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
-        CalculateTriangleFaces();
+
+        // Create "triangle" array
+        triangleFaces = new List<FogOfWarMesh.Triangle>();
+        for (int i = 0; i < vertices.Length; i += 3)
+        {
+            triangleFaces.Add(new FogOfWarMesh.Triangle(
+                vertices[i], vertices[i + 1], vertices[i + 2]));
+        }
     }
 
     public struct Triangle
@@ -342,7 +293,7 @@ public class FogOfWarMesh : MonoBehaviour
         return isIntersecting;
     }
 
-//Check if 2 line segments are intersecting in 2d space
+    //Check if 2 line segments are intersecting in 2d space
 //http://thirdpartyninjas.com/blog/2008/10/07/line-segment-intersection/
 //p1 and p2 belong to line 1, p3 and p4 belong to line 2
     bool AreLineSegmentsIntersecting(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
@@ -386,8 +337,7 @@ public class FogOfWarMesh : MonoBehaviour
         return isIntersecting;
     }
 
-
-//Is a point p inside a triangle p1-p2-p3?
+    //Is a point p inside a triangle p1-p2-p3?
 //From http://totologic.blogspot.se/2014/01/accurate-point-in-triangle-test.html
     bool IsPointInTriangle(Vector3 p, Vector3 p1, Vector3 p2, Vector3 p3)
     {
