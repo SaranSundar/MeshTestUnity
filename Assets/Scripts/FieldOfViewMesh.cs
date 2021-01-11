@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Utils;
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
@@ -7,9 +8,9 @@ public class FieldOfViewMesh : MonoBehaviour
 {
     private Color32[] colors;
     private Mesh mesh;
-    private readonly int sides = 6;
+    private readonly int numOfTriangleFaces = 6;
     private readonly float size = 2.0f;
-    public List<FogOfWarMesh.Triangle> triangleFaces;
+    public List<TriangleUtils.Triangle> triangleFaces;
     private int[] triangles;
     private Vector3[] vertices;
 
@@ -23,36 +24,50 @@ public class FieldOfViewMesh : MonoBehaviour
     private void CreateMesh()
     {
         // Allowed colors
-        Color32[] color32 = {Color.red, Color.blue, Color.cyan, Color.green, Color.magenta, Color.yellow};
+        Color32[] allowedTriangleFaceColors =
+            {Color.red, Color.blue, Color.cyan, Color.green, Color.magenta, Color.yellow};
 
         // Generate three vertices per triangle face, one color per vertex
-        colors = new Color32[sides * 3];
-        vertices = new Vector3[sides * 3];
-        triangles = new int[sides * 3];
-        for (var i = 0; i < sides; i++)
+        colors = new Color32[numOfTriangleFaces * 3];
+        vertices = new Vector3[numOfTriangleFaces * 3];
+        triangles = new int[numOfTriangleFaces * 3];
+        triangleFaces = new List<TriangleUtils.Triangle>();
+
+        for (var i = 0; i < numOfTriangleFaces; i++)
         {
-            // Create triangle points, set all points to the same color
+            // Create triangle points
+            Color32 triangleFaceColor = allowedTriangleFaceColors[i % allowedTriangleFaceColors.Length];
+            int index1 = 3 * i;
+            int index2 = index1 + 1;
+            int index3 = index2 + 1;
+
+            // Set all triangle points to use same color
+            colors[index1] = triangleFaceColor;
+            colors[index2] = triangleFaceColor;
+            colors[index3] = triangleFaceColor;
+
+            // Set all triangle points to be the index of the vertices
+            triangles[index1] = index1;
+            triangles[index2] = index2;
+            triangles[index3] = index3;
 
             // Center point
-            colors[3 * i] = color32[i % color32.Length];
-            vertices[3 * i] = Vector3.zero;
-            triangles[3 * i] = 3 * i;
+            vertices[index1] = Vector3.zero;
 
             // Along current angle in unit circle
-            colors[3 * i + 1] = color32[i % color32.Length];
-            vertices[3 * i + 1] = new Vector3(
-                Mathf.Cos(2 * Mathf.PI / sides * i),
+            vertices[index2] = new Vector3(
+                Mathf.Cos(2 * Mathf.PI / numOfTriangleFaces * i),
                 0,
-                Mathf.Sin(2 * Mathf.PI / sides * i)) * size;
-            triangles[3 * i + 1] = 3 * i + 1;
+                Mathf.Sin(2 * Mathf.PI / numOfTriangleFaces * i)) * size;
 
             // Along next angle in unit circle
-            colors[3 * i + 2] = color32[i % color32.Length];
-            vertices[3 * i + 2] = new Vector3(
-                Mathf.Cos(2 * Mathf.PI / sides * (i + 1)),
+            vertices[index3] = new Vector3(
+                Mathf.Cos(2 * Mathf.PI / numOfTriangleFaces * (i + 1)),
                 0,
-                Mathf.Sin(2 * Mathf.PI / sides * (i + 1))) * size;
-            triangles[3 * i + 2] = 3 * i + 2;
+                Mathf.Sin(2 * Mathf.PI / numOfTriangleFaces * (i + 1))) * size;
+
+            triangleFaces.Add(new TriangleUtils.Triangle(
+                vertices[index1], vertices[index2], vertices[index3]));
         }
 
         // Apply calculations to the mesh
@@ -63,11 +78,5 @@ public class FieldOfViewMesh : MonoBehaviour
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
-
-        // Create "triangle" array
-        triangleFaces = new List<FogOfWarMesh.Triangle>();
-        for (var i = 0; i < vertices.Length; i += 3)
-            triangleFaces.Add(new FogOfWarMesh.Triangle(
-                vertices[i], vertices[i + 1], vertices[i + 2]));
     }
 }
