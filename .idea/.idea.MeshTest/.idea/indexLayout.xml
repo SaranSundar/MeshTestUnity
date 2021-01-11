@@ -22,6 +22,7 @@
       <Path>Temp</Path>
       <Path>UserSettings</Path>
       <Path>obj</Path>
+      <Path>test.app</Path>
     </explicitExcludes>
   </component>
 </project>

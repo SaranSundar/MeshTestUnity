@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Utils;
@@ -26,5 +27,36 @@ public class FieldOfViewMesh : MonoBehaviour
         vertices = mesh.vertices;
         colors = mesh.colors32;
         triangles = mesh.triangles;
+    }
+
+    private void Update()
+    {
+        Transform transform1;
+        (transform1 = transform).position = transform.position + Vector3.back * (Input.GetAxisRaw("Vertical") * Time.deltaTime * 10);
+        transform.position = transform1.position + Vector3.right * (Input.GetAxisRaw("Horizontal") * Time.deltaTime * 10);
+        // if (Input.GetKey(KeyCode.UpArrow))
+        // {
+        //     var transformPosition = transform.position;
+        //     transformPosition.z += 1;
+        //     transform.position = transformPosition;
+        // }
+        // if (Input.GetKey(KeyCode.DownArrow))
+        // {
+        //     var transformPosition = transform.position;
+        //     transformPosition.z -= 1;
+        //     transform.position = transformPosition;
+        // }
+        // if (Input.GetKey(KeyCode.LeftArrow))
+        // {
+        //     var transformPosition = transform.position;
+        //     transformPosition.x -= 1;
+        //     transform.position = transformPosition;
+        // }
+        // if (Input.GetKey(KeyCode.RightArrow))
+        // {
+        //     var transformPosition = transform.position;
+        //     transformPosition.x += 1;
+        //     transform.position = transformPosition;
+        // }
     }
 }
